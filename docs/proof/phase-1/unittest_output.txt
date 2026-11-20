@@ -1,0 +1,14 @@
+test_camera_yaw_and_diagonal_normalization (test_engine.TestContractV1.test_camera_yaw_and_diagonal_normalization) ... ok
+test_contract_schema_fields (test_engine.TestContractV1.test_contract_schema_fields) ... ok
+test_dawn_timeout_loss (test_engine.TestContractV1.test_dawn_timeout_loss) ... ok
+test_determinism_identical_runs (test_engine.TestContractV1.test_determinism_identical_runs) ... ok
+test_invalid_inputs_exit_code_2 (test_engine.TestContractV1.test_invalid_inputs_exit_code_2) ... ok
+test_move_pickup_deposit_lit_and_win (test_engine.TestContractV1.test_move_pickup_deposit_lit_and_win) ... ok
+test_pulse_stuns_and_pushes_shade (test_engine.TestContractV1.test_pulse_stuns_and_pushes_shade) ... ok
+test_shade_hit_drops_motes_and_loses_no_flames (test_engine.TestContractV1.test_shade_hit_drops_motes_and_loses_no_flames) ... ok
+test_shade_respects_lit_lantern_safe_radius (test_engine.TestContractV1.test_shade_respects_lit_lantern_safe_radius) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 1.104s
+
+OK
