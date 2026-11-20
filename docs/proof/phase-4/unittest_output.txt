@@ -1,0 +1,19 @@
+test_contract_v12_schema_and_tuning (test_engine.TestContractV12.test_contract_v12_schema_and_tuning) ... ok
+test_dash_charm_pause_fall_and_night2_drifter_regression (test_engine.TestContractV12.test_dash_charm_pause_fall_and_night2_drifter_regression) ... ok
+test_dawn_survived_win_vs_dawn_loss (test_engine.TestContractV12.test_dawn_survived_win_vs_dawn_loss) ... ok
+test_full_night3_performance_and_determinism (test_engine.TestContractV12.test_full_night3_performance_and_determinism) ... ok
+test_lantern_fuel_decay_out_and_relight_cost_5 (test_engine.TestContractV12.test_lantern_fuel_decay_out_and_relight_cost_5) ... ok
+test_lighting_all_lanterns_does_not_end_night_early_and_scales_capacity (test_engine.TestContractV12.test_lighting_all_lanterns_does_not_end_night_early_and_scales_capacity)
+Updated from Phase 1-2 test_move_pickup_deposit_lit_and_win: ... ok
+test_pulse_stuns_and_pushes_shade (test_engine.TestContractV12.test_pulse_stuns_and_pushes_shade) ... ok
+test_refuel_lit_lantern_and_full_lantern_ignored (test_engine.TestContractV12.test_refuel_lit_lantern_and_full_lantern_ignored) ... ok
+test_shade_drains_weak_lantern_and_pulse_gives_15_bonus (test_engine.TestContractV12.test_shade_drains_weak_lantern_and_pulse_gives_15_bonus) ... ok
+test_shade_hit_drops_motes_and_recoil (test_engine.TestContractV12.test_shade_hit_drops_motes_and_recoil) ... ok
+test_contract_v13_fields (test_phase4.TestPhase4ContractV13.test_contract_v13_fields) ... ok
+test_leaderboard_top10_sort_tiebreak_and_export_cli (test_phase4.TestPhase4ContractV13.test_leaderboard_top10_sort_tiebreak_and_export_cli) ... ok
+test_soak_runner_3_nights_no_crash_and_stable_mem (test_phase4.TestPhase4ContractV13.test_soak_runner_3_nights_no_crash_and_stable_mem) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 3.012s
+
+OK

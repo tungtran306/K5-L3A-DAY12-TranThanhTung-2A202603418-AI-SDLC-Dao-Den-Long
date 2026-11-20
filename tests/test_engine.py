@@ -73,7 +73,8 @@ class TestContractV12(unittest.TestCase):
     # --- Phase 1-2 Regression Tests (updated where replaced by Ticket-03 with explicit reasons) ---
 
     def test_contract_v12_schema_and_tuning(self) -> None:
-        self.assertEqual(self.contract["contract_version"], "1.2")
+        # Updated in Phase 4 (Ticket-04): contract_version bumped from "1.2" to "1.3"
+        self.assertEqual(self.contract["contract_version"], "1.3")
         self.assertEqual(self.tuning["fuel_max"], 100)
         self.assertEqual(self.tuning["fuel_decay_per_s"], 1.0)
         self.assertEqual(self.tuning["fuel_per_mote"], 10)

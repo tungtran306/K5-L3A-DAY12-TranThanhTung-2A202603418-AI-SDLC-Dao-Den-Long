@@ -1,54 +1,69 @@
-# Đảo Đèn Lồng — Day 12 AI SDLC (Phase 2: Ba Hòn Đảo)
+# Đảo Đèn Lồng — v1.0.0 (Day 12 AI SDLC)
 
-> Game 3D góc nhìn thứ ba qua **3 Đêm**: **Đêm 1 – Đảo Bến**, **Đêm 2 – Đảo Cau**, **Đêm 3 – Đảo Chuông**. Cùng **Mây** thu thập đom đóm, sử dụng **Lướt (Dash)**, **Tỏa Sáng (Pulse)**, **Bục Nhảy**, và **Bùa Gió** để thắp sáng tất cả Đèn Lồng Lớn, né **Bóng Mực**, **Gió Lạc** và **Gió mạnh**.
+> **Video Demo (< 5 phút):** [Xem demo trên GitHub Release v1.0.0](https://github.com/tungtran306/K5-L3A-DAY12-TranThanhTung-2A202603418-AI-SDLC-Dao-Den-Long/releases/tag/v1.0.0) *(đính kèm `demo.mp4` trong Release `v1.0.0`)*
 
-## Cài đặt & Chạy (tối đa 3 lệnh)
-
-Yêu cầu: **Python 3.10+** (0 dependency ngoài; chạy trên macOS, Linux và Windows — trên Windows thay `python3` bằng `python`).
-
-```bash
-# 1. Kiểm tra biên dịch
-python3 -m py_compile src/maps.py src/engine.py src/headless.py src/server.py
-
-# 2. Chạy toàn bộ bộ kiểm chứng (Regression Phase 1 + Phase 2 + Determinism 3 Đêm + Benchmark 21,600 tick)
-python3 scripts/verify.py
-
-# 3. Mở game 3D trên trình duyệt (http://127.0.0.1:8000)
-python3 -m src.server
-```
-
-## Điều khiển (3D Web)
-- **`W / A / S / D`**: Di chuyển (`6.0 m/s`; `7.2 m/s` khi có Bùa Gió)
-- **`Space`**: Nhảy (`7.0 m/s`, trọng lực `-20 m/s²`)
-- **`Shift`**: Lướt (`14.0 m/s` trong `0.2s`, hồi chiêu `1.5s`, `0s` khi có Bùa Gió)
-- **`E`**: Nạp đom đóm vào Đèn Lồng Lớn gần nhất (`interact_radius = 2.0m`, cần `10` đom đóm/đèn)
-- **`F`**: Tỏa Sáng (`pulse`) — tốn `3` đom đóm, bán kính `5.0m`, hồi chiêu `3.0s`, làm choáng Bóng Mực `2.0s` & đẩy lùi `4.0m`, ép Gió Lạc thả đồ
-- **`Esc` / `P`**: Tạm dừng (dừng hoàn toàn logic)
-- **`Q / R`**, **Mũi tên Trái/Phải**, hoặc **Kéo chuột**: Xoay camera 3D (camera góc nhìn thứ ba tự do xoay quanh Mây; chế độ headless vẫn xử lý đúng `cam_yaw_deg` theo công thức Test Contract).
-
-## Sáng tạo của tôi
-Để tăng trải nghiệm chơi mà **không phá vỡ số liệu chuẩn, bản đồ chuẩn và Test Contract v1.1**, bản chơi 3D (`web/game.js`) bổ sung thêm **2 loại bùa buff cổ tích** trên cả 3 Đêm (tắt hoàn toàn trong chế độ headless `src/engine.py`):
-1. **Bùa Hút Đom Đóm (Xanh ngọc):** Hiệu lực `12s` (hồi sau `35s`), tự động hút các đom đóm trong bán kính `20m` bay về phía Mây.
-2. **Bùa Khiên Ánh Sáng (Vàng kim):** Hiệu lực `14s` (hồi sau `40s`), tạo quả cầu khiên vàng nhạt mờ bao quanh Mây và chặn `1` lần bị Bóng Mực chạm (khiên vỡ biến mất ngay khi chặn đòn, không mất Ngọn Lửa, không rơi đom đóm, đẩy Bóng Mực vào `recoil`).
-3. **Tinh chỉnh nhịp hồi Bùa Gió bản 3D:** Rút ngắn thời gian hồi Bùa Gió xuống `20s` trong bản chơi 3D (bản headless vẫn giữ đúng `2700` tick theo Test Contract v1.1).
-
-- **Bằng chứng phần lõi không bị ảnh hưởng:** Toàn bộ 12/12 test tự động và SHA-256 tính tất định của 3 Đêm trong [`docs/proof/phase-2/verify_summary.json`](docs/proof/phase-2/verify_summary.json) vẫn giữ nguyên kết quả `PASS` sau khi thêm sáng tạo.
-
-## Cách tính điểm & Luật thắng (Phase 3 / Contract v1.2)
-Thông số chính thức tại [`game.contract.json`](game.contract.json) (`contract_version: "1.2"`):
-- **Luật thắng mới (`dawn_survived`):** Đèn sáng tự hao `1.0` dầu/giây (Bóng Mực hút thêm `5` dầu/giây khi `fuel < 30`). Giữ sống tới bình minh (`240 / 270 / 300 s`) với tối thiểu `ceil(0.6 * tổng đèn)` đèn đang sáng (Đêm 1: `3/5`, Đêm 2: `4/6`, Đêm 3: `5/7`).
-- **Sức chứa tăng dần:** `10 + 2 * số lần thắp thành công` (tối đa `20`).
-- **Điểm:** `+5` mỗi đom đóm nạp/châm dầu · `+100` thắp lần đầu · `+40` thắp lại (tốn `5` đom đóm) · `+5` Bóng Mực trúng Tỏa Sáng (`+15` nếu đang `drain`) · thưởng bình minh (khi thắng): `+50 + floor(fuel)` mỗi đèn sáng + `+50` mỗi Ngọn Lửa còn lại.
-- **Chế độ mù màu:** Bật *"Bảng màu dễ phân biệt"* trong Cài đặt (lưu `localStorage`).
-
-## Bằng chứng, ADR, Changelog & Harness AI
-- ADR thiết kế Phase 3: [`docs/adr/001-lantern-fuel-and-dawn-survival.md`](docs/adr/001-lantern-fuel-and-dawn-survival.md) · [`CHANGELOG.md`](CHANGELOG.md)
-- Ghi chép & Spec: [`docs/notes/phase-1.md`](docs/notes/phase-1.md) · [`docs/notes/phase-2.md`](docs/notes/phase-2.md) · [`docs/notes/phase-3.md`](docs/notes/phase-3.md)
-- Bằng chứng kiểm chứng tự động: [`docs/proof/phase-1/`](docs/proof/phase-1/) · [`docs/proof/phase-2/`](docs/proof/phase-2/) · [`docs/proof/phase-3/`](docs/proof/phase-3/)
-- Harness AI: [`AGENTS.md`](AGENTS.md), [`.agents/skills/verify-phase/SKILL.md`](.agents/skills/verify-phase/SKILL.md), [`scripts/verify.py`](scripts/verify.py), [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
-- Bản quyền & Nguồn: [`CREDITS.md`](CREDITS.md) · [`LICENSE`](LICENSE)
+Game **3D góc nhìn thứ ba** qua **3 Đêm** (*Đêm 1 – Đảo Bến*, *Đêm 2 – Đảo Cau*, *Đêm 3 – Đảo Chuông*): cùng **Mây** (đội nón lá treo đèn lồng nhỏ) gom đom đóm thắp và châm dầu giữ các Đèn Lồng Lớn sáng tới bình minh, dùng **Lướt**, **Tỏa Sáng**, **Bục Nhảy** và **Bùa Gió** để né **Bóng Mực** và **Gió Lạc**.
 
 ---
 
-### Tài liệu đề bài gốc
-- [GUIDE.md](GUIDE.md) · [CHECKPOINTS.md](CHECKPOINTS.md) · [SUBMISSION.md](SUBMISSION.md) · [RULES.md](RULES.md) · [RUBRIC.md](RUBRIC.md)
+## Yêu cầu hệ thống & Cài đặt (Tối đa 3 lệnh)
+
+- **Hệ điều hành:** macOS, Linux hoặc Windows (trên Windows thay `python3` bằng `python`).
+- **Yêu cầu:** **Python 3.10+** (0 dependency cài thêm) + trình duyệt hiện đại có WebGL (Chrome/Edge/Firefox/Safari).
+
+```bash
+# 1. Kiểm tra biên dịch toàn bộ mã nguồn
+python3 -m py_compile src/maps.py src/engine.py src/headless.py src/server.py src/leaderboard.py src/soak.py src/bench.py
+
+# 2. Chạy toàn bộ bộ kiểm chứng (Unit/Contract v1.3 + Regression + Determinism 3 Đêm + Soak 10 Đêm)
+python3 scripts/verify.py
+
+# 3. Chơi game 3D trên trình duyệt (http://127.0.0.1:8000)
+python3 -m src.server
+```
+
+## Điều khiển & Trợ năng (Accessibility)
+Mọi phím đều có thể **đổi phím** (phát hiện trùng phím + nút *Khôi phục mặc định*) trong **Cài đặt & Trợ năng**:
+- **`W / A / S / D`**: Di chuyển (`6.0 m/s`; `7.2 m/s` khi có Bùa Gió)
+- **`Space`**: Nhảy · **`Shift`**: Lướt (`14 m/s`, hồi `1.5s`, `0s` khi có Bùa Gió)
+- **`E`**: Thắp đèn / Thắp lại (`5` đom đóm) / Châm dầu (`+10` fuel/đom đóm)
+- **`F`**: Tỏa Sáng (`3` đom đóm, choáng Bóng Mực `+5` điểm hoặc `+15` nếu đang `drain`, ép Gió Lạc thả đồ)
+- **`Esc` / `P`**: Tạm dừng · **`Q / R` / Mũi tên / Kéo chuột**: Xoay camera 3D tự do (headless vẫn xoay theo `cam_yaw_deg`)
+- **Trợ năng:** Bảng màu dễ phân biệt (mù màu), Giảm chuyển động, Cỡ chữ tối thiểu `18px` + Cỡ chữ lớn `×1.25`, phụ đề & mũi tên chỉ hướng khi Bóng Mực xuất hiện / gió mạnh / 10s cuối / đèn yếu.
+
+## Sáng tạo của tôi
+Để tăng trải nghiệm chơi mà **không làm đổi số liệu chuẩn, bản đồ chuẩn và Test Contract v1.3**, bản chơi 3D (`web/game.js`) bổ sung **2 bùa buff cổ tích** (tắt hoàn toàn trong chế độ headless, soak test và benchmark):
+1. **🧲 Bùa Hút Đom Đóm (Xanh ngọc):** Hiệu lực `12s` (hồi `35s`), hút đom đóm trong bán kính `20m` bay về phía Mây.
+2. **🛡️ Bùa Khiên Ánh Sáng (Vàng kim):** Hiệu lực `14s` (hồi `40s`), tạo quả cầu khiên vàng nhạt mờ quanh Mây chặn `1` lần bị Bóng Mực chạm (khiên vỡ biến mất ngay khi chặn đòn, không mất Ngọn Lửa/đom đóm).
+3. **Tinh chỉnh nhịp hồi Bùa Gió bản 3D:** `20s` trong bản 3D (headless giữ nguyên `2700` tick theo Contract).
+- **Bằng chứng phần lõi không bị ảnh hưởng:** [`docs/proof/phase-4/verify_summary.json`](docs/proof/phase-4/verify_summary.json) (toàn bộ test & determinism 3 Đêm `PASS`).
+
+## Lệnh Test, Headless, Benchmark, Soak & Bảng xếp hạng (Contract v1.3)
+
+```bash
+# Headless CLI (60 tick/s, tất định 100%)
+python3 -m src.headless --seed 42 --night 1 --ticks 600 --out out.jsonl --snapshot-every 10
+
+# Benchmark 3D 1280x720 (200 Bóng Mực, 100 đom đóm, 3s warmup + 30s đo)
+python3 -m src.bench --seed 42 --duration 30 --out bench.json
+
+# Soak test 10 Đêm liên tiếp
+python3 -m src.soak --seed 7 --nights 10 --out soak.json
+
+# Xuất Bảng xếp hạng cục bộ (Top 10)
+python3 -m src.server --export-leaderboard leaderboard_out.json
+
+# Đóng gói bản phát hành v1.0.0
+python3 scripts/package_release.py
+```
+
+*Lưu ý về Benchmark bản Web:* `src/bench.py` tự động mở Chrome/Edge ở cửa sổ `1280×720` kèm cờ `--disable-frame-rate-limit --disable-gpu-vsync` (`vsync_off: true`). Nếu máy không có Chrome/Edge và rơi về trình duyệt mặc định không tắt được vsync, `vsync_off` sẽ được ghi `false`. `peak_mem_mb` ghi theo `performance.memory` nếu trình duyệt hỗ trợ, ngược lại ghi `null` do giới hạn sandbox trình duyệt.
+
+## Tài liệu, Bằng chứng, ADR, Retro & Harness AI
+- **Retrospective toàn dự án:** [`docs/RETRO.md`](docs/RETRO.md)
+- **ADR & Changelog:** [`docs/adr/001-lantern-fuel-and-dawn-survival.md`](docs/adr/001-lantern-fuel-and-dawn-survival.md) · [`CHANGELOG.md`](CHANGELOG.md)
+- **Kết quả đo hiệu năng & ổn định:** [`bench.json`](bench.json) · [`soak.json`](soak.json)
+- **Ghi chép từng phase:** [`phase-1`](docs/notes/phase-1.md) · [`phase-2`](docs/notes/phase-2.md) · [`phase-3`](docs/notes/phase-3.md) · [`phase-4`](docs/notes/phase-4.md)
+- **Bằng chứng tự động:** [`docs/proof/phase-1/`](docs/proof/phase-1/) · [`phase-2/`](docs/proof/phase-2/) · [`phase-3/`](docs/proof/phase-3/) · [`phase-4/`](docs/proof/phase-4/)
+- **Harness AI:** [`AGENTS.md`](AGENTS.md) · [`.agents/skills/verify-phase/SKILL.md`](.agents/skills/verify-phase/SKILL.md) · [`scripts/verify.py`](scripts/verify.py) · [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
+- **Bản quyền & Nguồn:** [`CREDITS.md`](CREDITS.md) · [`LICENSE`](LICENSE)

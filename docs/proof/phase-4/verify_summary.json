@@ -1,0 +1,15 @@
+{
+  "phase": "phase-4",
+  "contract_version": "1.3",
+  "unittest_seconds": 3.112,
+  "soak_10_nights_seconds": 1.14,
+  "soak_crashes": 0,
+  "soak_mem_start_mb": 17.36,
+  "soak_mem_end_mb": 17.39,
+  "determinism_sha256": {
+    "night_1": "571d3c3849ac328e3b35b50b3db8e99901a0f9dd41e933741d437003ea4ee9c1",
+    "night_2": "06d2f9a8c7c8521788ac58be79a1864ae64e5676e19aa4491d38e0e9b8c2ba1c",
+    "night_3": "b18b6cfb1090162958aad8bed71352a0d8011fcaded81e6da4ca20cdfde2e509"
+  },
+  "status": "PASS"
+}
