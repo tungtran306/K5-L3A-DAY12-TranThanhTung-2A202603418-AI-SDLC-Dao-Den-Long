@@ -40,8 +40,10 @@
       </div>
     </div>
 
-    <!-- Offscreen arrow to nearest unlit lantern -->
+    <!-- Offscreen arrow to nearest unlit lantern + shade spawn cue + subtitles -->
     <div id="offscreen-arrow" class="offscreen-arrow hidden">▲</div>
+    <div id="shade-arrow" class="offscreen-arrow shade-arrow hidden">▲</div>
+    <div id="subtitle-banner" class="subtitle-banner hidden"></div>
 
     <div id="interact-hint" class="interact-hint hidden">E — Nạp ánh sáng (0/10)</div>
 
@@ -88,8 +90,21 @@
           <button class="btn-secondary btn-night-pick" data-night="2">Đêm 2: Đảo Cau</button>
           <button class="btn-secondary btn-night-pick" data-night="3">Đêm 3: Đảo Chuông</button>
         </div>
-        <button id="btn-menu-settings" class="btn-ghost">Cài đặt âm thanh & chuột</button>
+        <div class="btn-row">
+          <button id="btn-menu-leaderboard" class="btn-secondary">Bảng xếp hạng</button>
+          <button id="btn-menu-settings" class="btn-ghost">Cài đặt & Trợ năng</button>
+        </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Leaderboard Screen -->
+  <div id="screen-leaderboard" class="overlay hidden">
+    <div class="overlay-card wide">
+      <div class="eyebrow">TOP 10 NGƯỜI GIỮ ĐÈN</div>
+      <h1>Bảng Xếp Hạng</h1>
+      <div id="leaderboard-table" class="lb-table"></div>
+      <button id="btn-lb-close" class="btn-primary">Đóng</button>
     </div>
   </div>
 
@@ -118,8 +133,8 @@
 
   <!-- Settings Modal -->
   <div id="screen-settings" class="overlay hidden">
-    <div class="overlay-card">
-      <h1>Cài Đặt</h1>
+    <div class="overlay-card wide">
+      <h1>Cài Đặt & Trợ Năng</h1>
       <div class="setting-row">
         <label for="opt-volume">Âm lượng: <span id="opt-volume-val">60%</span></label>
         <input id="opt-volume" type="range" min="0" max="100" value="60" />
@@ -128,11 +143,18 @@
         <label for="opt-sens">Độ nhạy chuột: <span id="opt-sens-val">1.0x</span></label>
         <input id="opt-sens" type="range" min="30" max="250" value="100" />
       </div>
-      <div class="setting-row">
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-          <input id="opt-colorblind" type="checkbox" />
-          <span>Bảng màu dễ phân biệt (Chế độ mù màu)</span>
-        </label>
+      <div class="setting-checks">
+        <label><input id="opt-colorblind" type="checkbox" /> Bảng màu dễ phân biệt (Mù màu)</label>
+        <label><input id="opt-reduced-motion" type="checkbox" /> Giảm chuyển động (Tắt rung & nhấp nháy)</label>
+        <label><input id="opt-large-text" type="checkbox" /> Cỡ chữ lớn (×1.25)</label>
+      </div>
+      <div class="keybind-section">
+        <div class="keybind-header">
+          <span>Đổi phím điều khiển</span>
+          <button id="btn-reset-keys" class="btn-ghost small-btn">Khôi phục mặc định</button>
+        </div>
+        <div id="keybind-list" class="keybind-grid"></div>
+        <div id="keybind-warn" class="keybind-warn hidden"></div>
       </div>
       <button id="btn-settings-close" class="btn-primary">Lưu & Đóng</button>
     </div>
@@ -145,6 +167,11 @@
       <h1 id="result-title">Chiến Thắng!</h1>
       <p id="result-subtitle"></p>
       <div id="result-stats" class="overlay-stats"></div>
+      <div id="lb-submit-box" class="lb-submit-box hidden">
+        <input id="lb-name-input" type="text" maxlength="12" placeholder="Nhập tên (3–12 ký tự)..." />
+        <button id="btn-lb-save" class="btn-secondary">Lưu điểm</button>
+        <div id="lb-save-msg" class="lb-save-msg"></div>
+      </div>
       <div class="btn-row">
         <button id="btn-next-night" class="btn-primary hidden">Sang Đêm kế tiếp</button>
         <button id="btn-retry-night" class="btn-primary">Chơi lại Đêm</button>
