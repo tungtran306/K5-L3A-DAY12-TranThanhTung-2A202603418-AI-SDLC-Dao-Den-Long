@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Đảo Đèn Lồng — Đêm 1: Đảo Bến</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="canvas-container"></div>
+
+  <div id="hud">
+    <div class="hud-top">
+      <div class="hud-card">
+        <div class="hud-label">Ngọn Lửa (Máu)</div>
+        <div id="hud-flames" class="hud-value warm">🔥🔥🔥</div>
+      </div>
+      <div class="hud-card">
+        <div class="hud-label">Đom Đóm</div>
+        <div id="hud-carried" class="hud-value warm">0 / 6</div>
+      </div>
+      <div class="hud-card">
+        <div class="hud-label">Đèn Lồng Lớn</div>
+        <div id="hud-lanterns" class="hud-value warm">0 / 5</div>
+      </div>
+      <div class="hud-card">
+        <div class="hud-label">Thời Gian Đêm</div>
+        <div id="hud-time" class="hud-value">04:00</div>
+      </div>
+      <div class="hud-card">
+        <div class="hud-label">Điểm</div>
+        <div id="hud-score" class="hud-value">0</div>
+      </div>
+      <div class="hud-card">
+        <div class="hud-label">Tỏa Sáng (E)</div>
+        <div id="hud-pulse" class="hud-value">Sẵn sàng</div>
+      </div>
+    </div>
+
+    <div id="interact-hint" class="hidden">Nhấn <b>F</b> để nạp ánh sáng vào Đèn Lồng</div>
+
+    <div class="hud-controls">
+      <span><b>WASD</b> Di chuyển</span>
+      <span><b>Space</b> Nhảy</span>
+      <span><b>F</b> Thắp đèn</span>
+      <span><b>E</b> Tỏa sáng (tốn 2 đom đóm)</span>
+      <span><b>Q / R</b> hoặc <b>Kéo chuột</b> Xoay camera</span>
+    </div>
+  </div>
+
+  <div id="overlay" class="overlay hidden">
+    <div class="overlay-card">
+      <h1 id="overlay-title">Đảo Đèn Lồng</h1>
+      <p id="overlay-subtitle"></p>
+      <div id="overlay-stats" class="overlay-stats"></div>
+      <button id="btn-restart" class="btn-primary">Chơi lại</button>
+    </div>
+  </div>
+
+  <script type="module" src="game.js"></script>
+</body>
+</html>
