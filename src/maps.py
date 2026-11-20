@@ -65,7 +65,7 @@ def get_night_config(night: int) -> NightConfig:
         return NightConfig(
             night=1,
             name="Đêm 1 – Đảo Bến",
-            duration_s=300.0,
+            duration_s=240.0,
             shade_speed=4.0,
             shade_spawn_interval_ticks=480,
             shade_max=6,
@@ -108,7 +108,7 @@ def get_night_config(night: int) -> NightConfig:
         return NightConfig(
             night=2,
             name="Đêm 2 – Đảo Cau",
-            duration_s=330.0,
+            duration_s=270.0,
             shade_speed=4.0,
             shade_spawn_interval_ticks=420,
             shade_max=8,
@@ -143,7 +143,7 @@ def get_night_config(night: int) -> NightConfig:
         return NightConfig(
             night=3,
             name="Đêm 3 – Đảo Chuông",
-            duration_s=360.0,
+            duration_s=300.0,
             shade_speed=4.5,
             shade_spawn_interval_ticks=360,
             shade_max=10,
