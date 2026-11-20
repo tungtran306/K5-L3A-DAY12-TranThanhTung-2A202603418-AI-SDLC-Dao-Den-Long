@@ -6,7 +6,7 @@ const JUMP_VELOCITY = 7.0;
 const GRAVITY = 20.0;
 const CHARM_SPEED = 7.2;
 const CHARM_DURATION_TICKS = 600;
-const CHARM_RESPAWN_TICKS = 2700;
+const CHARM_RESPAWN_TICKS = 1200; // 20s in 3D Web mode (headless keeps 2700 ticks per Contract v1.1)
 const DROPPED_MOTE_TTL_TICKS = 480;
 const RESPAWN_WAIT_TICKS = 60;
 const PULSE_PUSH_TICKS = 15;
@@ -429,7 +429,24 @@ class DaoDenLongApp {
     miniLantern.position.set(0.65, 1.48, 0.22);
     const pLight = new THREE.PointLight(PALETTE.lanternLit, 2.0, 11);
     pLight.position.set(0.65, 1.5, 0.22);
-    g.add(cloak, scarf, head, hat, miniLantern, pLight);
+
+    // Translucent pale-gold shield aura around May (visible while shieldTicks > 0)
+    this.shieldSphere = new THREE.Mesh(
+      new THREE.SphereGeometry(1.35, 24, 18),
+      new THREE.MeshStandardMaterial({
+        color: 0xffe680,
+        emissive: 0xffd166,
+        emissiveIntensity: 0.45,
+        transparent: true,
+        opacity: 0.28,
+        roughness: 0.2,
+        depthWrite: false,
+      })
+    );
+    this.shieldSphere.position.y = 1.05;
+    this.shieldSphere.visible = false;
+
+    g.add(cloak, scarf, head, hat, miniLantern, pLight, this.shieldSphere);
     return g;
   }
 
@@ -1002,9 +1019,9 @@ class DaoDenLongApp {
       if (this.magnetTicks > 0 && this.carried < this.tuning.carry_capacity) {
         for (const m of this.motes) {
           const d = distXZ(this.playerPos, m.pos);
-          if (d > 0.2 && d <= 7.5 && Math.abs(this.playerPos[1] - m.pos[1]) <= 2.5) {
-            m.pos[0] += ((this.playerPos[0] - m.pos[0]) / d) * 8.5 * DT;
-            m.pos[2] += ((this.playerPos[2] - m.pos[2]) / d) * 8.5 * DT;
+          if (d > 0.2 && d <= 20.0 && Math.abs(this.playerPos[1] - m.pos[1]) <= 4.0) {
+            m.pos[0] += ((this.playerPos[0] - m.pos[0]) / d) * 11.0 * DT;
+            m.pos[2] += ((this.playerPos[2] - m.pos[2]) / d) * 11.0 * DT;
           }
         }
       }
@@ -1348,6 +1365,13 @@ class DaoDenLongApp {
     if (!this.playerPos) return;
     this.playerGroup.position.set(this.playerPos[0], this.playerPos[1], this.playerPos[2]);
     this.playerGroup.visible = this.respawnWaitTicks <= 0 && (this.invulnTicks <= 0 || Math.floor(nowSec * 14) % 2 === 0);
+    if (this.shieldSphere) {
+      this.shieldSphere.visible = this.shieldTicks > 0;
+      if (this.shieldTicks > 0) {
+        const pulse = 1.0 + Math.sin(nowSec * 5.0) * 0.04;
+        this.shieldSphere.scale.set(pulse, pulse, pulse);
+      }
+    }
 
     for (const m of this.motes) {
       m.mesh.position.set(m.pos[0], m.pos[1] + 0.8 + Math.sin(nowSec * 3 + m.phase) * 0.2, m.pos[2]);

@@ -28,8 +28,9 @@ python3 -m src.server
 
 ## Sáng tạo của tôi
 Để tăng trải nghiệm chơi mà **không phá vỡ số liệu chuẩn, bản đồ chuẩn và Test Contract v1.1**, bản chơi 3D (`web/game.js`) bổ sung thêm **2 loại bùa buff cổ tích** trên cả 3 Đêm (tắt hoàn toàn trong chế độ headless `src/engine.py`):
-1. **Bùa Hút Đom Đóm (Xanh ngọc):** Hiệu lực `12s` (hồi sau `35s`), tự động hút các đom đóm trong bán kính `7.5m` bay về phía Mây.
-2. **Bùa Khiên Ánh Sáng (Vàng kim):** Hiệu lực `14s` (hồi sau `40s`), chặn `1` lần bị Bóng Mực chạm (không mất Ngọn Lửa, không rơi đom đóm, đẩy Bóng Mực vào trạng thái `recoil`).
+1. **Bùa Hút Đom Đóm (Xanh ngọc):** Hiệu lực `12s` (hồi sau `35s`), tự động hút các đom đóm trong bán kính `20m` bay về phía Mây.
+2. **Bùa Khiên Ánh Sáng (Vàng kim):** Hiệu lực `14s` (hồi sau `40s`), tạo quả cầu khiên vàng nhạt mờ bao quanh Mây và chặn `1` lần bị Bóng Mực chạm (khiên vỡ biến mất ngay khi chặn đòn, không mất Ngọn Lửa, không rơi đom đóm, đẩy Bóng Mực vào `recoil`).
+3. **Tinh chỉnh nhịp hồi Bùa Gió bản 3D:** Rút ngắn thời gian hồi Bùa Gió xuống `20s` trong bản chơi 3D (bản headless vẫn giữ đúng `2700` tick theo Test Contract v1.1).
 
 - **Bằng chứng phần lõi không bị ảnh hưởng:** Toàn bộ 12/12 test tự động và SHA-256 tính tất định của 3 Đêm trong [`docs/proof/phase-2/verify_summary.json`](docs/proof/phase-2/verify_summary.json) vẫn giữ nguyên kết quả `PASS` sau khi thêm sáng tạo.
 
