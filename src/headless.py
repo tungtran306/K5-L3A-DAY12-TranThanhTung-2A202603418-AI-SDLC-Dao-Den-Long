@@ -1,4 +1,4 @@
-"""Headless CLI runner implementing Test Contract v1.0 for Dao Den Long."""
+"""Headless CLI runner implementing Test Contract v1.1 for Dao Den Long."""
 
 from __future__ import annotations
 
@@ -19,9 +19,9 @@ from src.engine import (
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Dao Den Long Headless Runner (Contract v1.0)")
+    parser = argparse.ArgumentParser(description="Dao Den Long Headless Runner (Contract v1.1)")
     parser.add_argument("--seed", type=int, required=True, help="Deterministic RNG seed")
-    parser.add_argument("--night", type=int, required=True, help="Night number (1)")
+    parser.add_argument("--night", type=int, required=True, help="Night number (1, 2, or 3)")
     parser.add_argument("--scenario", type=str, default=None, help="Optional scenario JSON file")
     parser.add_argument("--inputs", type=str, default=None, help="Optional inputs JSON file")
     parser.add_argument("--ticks", type=int, required=True, help="Maximum simulation ticks to run")
@@ -94,10 +94,9 @@ def run_headless(argv: list[str] | None = None) -> int:
         write_line(engine.snapshot())
 
         for k in range(args.ticks):
-            if engine.state != "playing":
+            if engine.state in ("won", "lost"):
                 break
 
-            # Apply input frame scheduled for tick k (if any)
             if frame_idx < num_frames and frames[frame_idx]["tick"] == k:
                 fr = frames[frame_idx]
                 frame_idx += 1
@@ -114,6 +113,8 @@ def run_headless(argv: list[str] | None = None) -> int:
                     cur_input.pulse = bool(fr["pulse"])
                 if "dash" in fr:
                     cur_input.dash = bool(fr["dash"])
+                if "pause" in fr:
+                    cur_input.pause = bool(fr["pause"])
 
             events = engine.step(cur_input)
             for ev in events:
@@ -122,7 +123,7 @@ def run_headless(argv: list[str] | None = None) -> int:
             if engine.tick % args.snapshot_every == 0:
                 write_line(engine.snapshot())
 
-            if engine.state != "playing":
+            if engine.state in ("won", "lost"):
                 break
 
         write_line(engine.end_record())
