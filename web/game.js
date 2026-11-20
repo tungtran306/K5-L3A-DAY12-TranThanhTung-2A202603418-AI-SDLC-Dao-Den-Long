@@ -74,7 +74,7 @@ function getNightDef(night) {
   if (night === 1) {
     return {
       night: 1,
-      duration: 300,
+      duration: 240,
       shadeSpeed: 4.0,
       shadeInterval: 480,
       shadeMax: 6,
@@ -98,7 +98,7 @@ function getNightDef(night) {
     const d2 = Math.hypot(-50, 18);
     return {
       night: 2,
-      duration: 330,
+      duration: 270,
       shadeSpeed: 4.0,
       shadeInterval: 420,
       shadeMax: 8,
@@ -128,7 +128,7 @@ function getNightDef(night) {
   }
   return {
     night: 3,
-    duration: 360,
+    duration: 300,
     shadeSpeed: 4.5,
     shadeInterval: 360,
     shadeMax: 10,
@@ -316,9 +316,20 @@ class DaoDenLongApp {
       return {
         volume: typeof saved.volume === "number" ? saved.volume : 60,
         sens: typeof saved.sens === "number" ? saved.sens : 100,
+        colorblind: Boolean(saved.colorblind),
       };
     } catch {
-      return { volume: 60, sens: 100 };
+      return { volume: 60, sens: 100, colorblind: false };
+    }
+  }
+
+  applyColorblindVisuals() {
+    document.body.classList.toggle("colorblind", this.settings.colorblind);
+    const rimHex = this.settings.colorblind ? 0x00b3ff : PALETTE.shadeRim;
+    if (this.shades) {
+      for (const s of this.shades) {
+        if (s.mesh?.userData?.bodyMat) s.mesh.userData.bodyMat.emissive.setHex(rimHex);
+      }
     }
   }
 
@@ -553,6 +564,7 @@ class DaoDenLongApp {
       document.getElementById("opt-volume-val").textContent = `${this.settings.volume}%`;
       document.getElementById("opt-sens").value = this.settings.sens;
       document.getElementById("opt-sens-val").textContent = `${(this.settings.sens / 100).toFixed(1)}x`;
+      document.getElementById("opt-colorblind").checked = this.settings.colorblind;
       this.showScreen("screen-settings");
     };
     document.getElementById("btn-menu-settings").addEventListener("click", () => openSettings("menu"));
@@ -566,10 +578,16 @@ class DaoDenLongApp {
       this.settings.sens = Number(e.target.value);
       document.getElementById("opt-sens-val").textContent = `${(this.settings.sens / 100).toFixed(1)}x`;
     });
+    document.getElementById("opt-colorblind").addEventListener("change", (e) => {
+      this.settings.colorblind = e.target.checked;
+      this.applyColorblindVisuals();
+    });
     document.getElementById("btn-settings-close").addEventListener("click", () => {
       this.saveSettings();
+      this.applyColorblindVisuals();
       this.showScreen(this.settingsReturnMode === "paused" ? "screen-pause" : "screen-menu");
     });
+    this.applyColorblindVisuals();
 
     document.getElementById("btn-next-night").addEventListener("click", () => this.startNightIntro(this.currentNight + 1));
     document.getElementById("btn-retry-night").addEventListener("click", () => this.startNightPlay(this.currentNight));
@@ -640,6 +658,7 @@ class DaoDenLongApp {
     this.grounded = true;
     this.flames = this.tuning.flames;
     this.carried = 0;
+    this.successfulLights = 0;
     this.invulnTicks = 0;
     this.dashCdTicks = 0;
     this.dashTicksLeft = 0;
@@ -663,7 +682,7 @@ class DaoDenLongApp {
     this.charmGroup.clear();
     this.fxGroup.clear();
 
-    // Lanterns
+    // Lanterns (unlit squashed 20% + fuel bar above lit lanterns)
     this.lanterns = this.nightDef.lanterns.map((l) => {
       const g = new THREE.Group();
       const post = new THREE.Mesh(
@@ -674,6 +693,25 @@ class DaoDenLongApp {
       const orbMat = new THREE.MeshStandardMaterial({ color: PALETTE.lanternUnlit, emissive: 0x000000, emissiveIntensity: 0 });
       const orb = new THREE.Mesh(new THREE.OctahedronGeometry(0.85, 1), orbMat);
       orb.position.y = 4.1;
+      orb.scale.y = 0.8; // Unlit: squashed 20% for non-color distinction
+      const tearBand = new THREE.Mesh(
+        new THREE.BoxGeometry(1.1, 0.14, 1.1),
+        new THREE.MeshBasicMaterial({ color: 0x1a1a24 })
+      );
+      tearBand.position.y = 4.1;
+      tearBand.rotation.z = 0.35;
+      const fuelBarBg = new THREE.Mesh(
+        new THREE.PlaneGeometry(1.8, 0.22),
+        new THREE.MeshBasicMaterial({ color: 0x1a1f36, side: THREE.DoubleSide })
+      );
+      fuelBarBg.position.y = 5.4;
+      fuelBarBg.visible = false;
+      const fuelBarFill = new THREE.Mesh(
+        new THREE.PlaneGeometry(1.72, 0.16),
+        new THREE.MeshBasicMaterial({ color: PALETTE.lanternLit, side: THREE.DoubleSide })
+      );
+      fuelBarFill.position.set(0, 5.4, 0.02);
+      fuelBarFill.visible = false;
       const light = new THREE.PointLight(PALETTE.lanternLit, 0, 16);
       light.position.y = 4.1;
       const safeRing = new THREE.Mesh(
@@ -682,11 +720,11 @@ class DaoDenLongApp {
       );
       safeRing.rotation.x = -Math.PI / 2;
       safeRing.position.y = 0.05;
-      g.add(post, orb, light, safeRing);
+      g.add(post, orb, tearBand, fuelBarBg, fuelBarFill, light, safeRing);
       g.position.set(l.pos[0], l.pos[1], l.pos[2]);
-      g.userData = { orbMat, light, safeRing };
+      g.userData = { orb, orbMat, tearBand, fuelBarBg, fuelBarFill, light, safeRing };
       this.lanternGroup.add(g);
-      return { id: l.id, pos: [...l.pos], lit: false, deposited: 0, mesh: g };
+      return { id: l.id, pos: [...l.pos], lit: false, deposited: 0, fuel60: 0, everLit: false, mesh: g };
     });
 
     // Initial 20 motes
@@ -816,6 +854,32 @@ class DaoDenLongApp {
     if (this.charmTicks > 0) this.charmTicks -= 1;
     if (this.magnetTicks > 0) this.magnetTicks -= 1;
     if (this.shieldTicks > 0) this.shieldTicks -= 1;
+
+    // Lantern fuel decay (1/s) & turn off when <= 0 (Ticket-03)
+    let anyOut = false;
+    for (const lt of this.lanterns) {
+      if (lt.lit) {
+        lt.fuel60 -= 1;
+        if (lt.fuel60 <= 0) {
+          lt.lit = false;
+          lt.fuel60 = 0;
+          lt.deposited = 0;
+          lt.everLit = true;
+          const ud = lt.mesh.userData;
+          ud.orb.scale.y = 0.8;
+          ud.tearBand.visible = true;
+          ud.orbMat.color.setHex(PALETTE.lanternUnlit);
+          ud.orbMat.emissive.setHex(0x000000);
+          ud.orbMat.emissiveIntensity = 0;
+          ud.light.intensity = 0;
+          ud.safeRing.material.opacity = 0;
+          ud.fuelBarBg.visible = false;
+          ud.fuelBarFill.visible = false;
+          anyOut = true;
+        }
+      }
+    }
+    if (anyOut) this.updateAtmosphere();
 
     // Dropped mote TTL
     this.motes = this.motes.filter((m) => {
@@ -974,12 +1038,13 @@ class DaoDenLongApp {
       }
     }
 
-    // Pickup motes & charms
+    // Pickup motes & charms (dynamic capacity 10 + 2 * successfulLights, max 20)
+    const carryCap = Math.min(20, 10 + 2 * this.successfulLights);
     if (this.respawnWaitTicks <= 0 && this.flames > 0) {
       this.motes = this.motes.filter((m) => {
         if (
           m.spawnTick < st &&
-          this.carried < this.tuning.carry_capacity &&
+          this.carried < carryCap &&
           distXZ(this.playerPos, m.pos) <= this.tuning.pickup_radius &&
           Math.abs(this.playerPos[1] - m.pos[1]) <= 1.5
         ) {
@@ -1016,7 +1081,7 @@ class DaoDenLongApp {
           this.sfx.lanternLit();
         }
       }
-      if (this.magnetTicks > 0 && this.carried < this.tuning.carry_capacity) {
+      if (this.magnetTicks > 0 && this.carried < carryCap) {
         for (const m of this.motes) {
           const d = distXZ(this.playerPos, m.pos);
           if (d > 0.2 && d <= 20.0 && Math.abs(this.playerPos[1] - m.pos[1]) <= 4.0) {
@@ -1026,10 +1091,10 @@ class DaoDenLongApp {
         }
       }
 
-      // Lantern interact
+      // Lantern interact (unlit OR lit with fuel < 100)
       let nearL = null, bestD = Infinity;
       for (const lt of this.lanterns) {
-        if (!lt.lit) {
+        if (!lt.lit || lt.fuel60 < 6000) {
           const d = distXZ(this.playerPos, lt.pos);
           if (d <= this.tuning.interact_radius && Math.abs(this.playerPos[1] - lt.pos[1]) <= 2.0 && d < bestD) {
             bestD = d;
@@ -1039,30 +1104,54 @@ class DaoDenLongApp {
       }
       const hint = document.getElementById("interact-hint");
       if (nearL) {
-        hint.textContent = `E — Nạp ánh sáng (${nearL.deposited}/10)`;
+        if (!nearL.lit) {
+          const req = nearL.everLit ? 5 : 10;
+          hint.textContent = `E — ${nearL.everLit ? "Thắp lại" : "Nạp ánh sáng"} (${nearL.deposited}/${req})`;
+        } else {
+          hint.textContent = `E — Châm dầu (${Math.round(nearL.fuel60 / 60)}/100)`;
+        }
         hint.classList.remove("hidden");
       } else {
         hint.classList.add("hidden");
       }
 
       if (interactP && nearL && this.carried > 0) {
-        const amt = Math.min(this.carried, 10 - nearL.deposited);
-        if (amt > 0) {
-          this.carried -= amt;
-          nearL.deposited += amt;
-          this.score += amt * this.tuning.score.per_mote;
-          this.sfx.pickup();
-          if (nearL.deposited >= 10) {
-            nearL.lit = true;
-            this.score += this.tuning.score.per_lantern;
-            const ud = nearL.mesh.userData;
-            ud.orbMat.color.setHex(PALETTE.lanternCore);
-            ud.orbMat.emissive.setHex(PALETTE.lanternLit);
-            ud.orbMat.emissiveIntensity = 1.6;
-            ud.light.intensity = 4.5;
-            ud.safeRing.material.opacity = 0.35;
-            this.sfx.lanternLit();
-            this.updateAtmosphere();
+        if (!nearL.lit) {
+          const req = nearL.everLit ? 5 : 10;
+          const amt = Math.min(this.carried, req - nearL.deposited);
+          if (amt > 0) {
+            this.carried -= amt;
+            nearL.deposited += amt;
+            this.score += amt * 5;
+            this.sfx.pickup();
+            if (nearL.deposited >= req) {
+              const isRelight = nearL.everLit;
+              nearL.lit = true;
+              nearL.fuel60 = 6000;
+              nearL.everLit = true;
+              this.successfulLights += 1;
+              this.score += isRelight ? 40 : 100;
+              const ud = nearL.mesh.userData;
+              ud.orb.scale.y = 1.0;
+              ud.tearBand.visible = false;
+              ud.orbMat.color.setHex(PALETTE.lanternCore);
+              ud.orbMat.emissive.setHex(PALETTE.lanternLit);
+              ud.orbMat.emissiveIntensity = 1.6;
+              ud.light.intensity = 4.5;
+              ud.safeRing.material.opacity = 0.35;
+              ud.fuelBarBg.visible = true;
+              ud.fuelBarFill.visible = true;
+              this.sfx.lanternLit();
+              this.updateAtmosphere();
+            }
+          }
+        } else {
+          const used = Math.min(this.carried, Math.ceil((6000 - nearL.fuel60) / 600));
+          if (used > 0) {
+            this.carried -= used;
+            nearL.fuel60 = Math.min(6000, nearL.fuel60 + 600 * used);
+            this.score += used * 5;
+            this.sfx.pickup();
           }
         }
       }
@@ -1235,15 +1324,20 @@ class DaoDenLongApp {
       }
     }
 
-    // Win/Lose priority
+    // Win/Lose priority (Ticket-03: no early win; survive until dawn with >= ceil(0.6 * total) lit)
     if (this.flames <= 0) {
       this.finishNight("lost", "Ngọn lửa của Mây đã tắt.");
-    } else if (this.lanterns.every((l) => l.lit)) {
-      this.score += Math.floor(this.timeLeft) * 2 + this.flames * 50;
-      this.campaignTotalScore += this.score;
-      this.finishNight("won", `Hoàn thành ${NIGHT_QUOTES[this.currentNight].name}!`);
     } else if (this.timeLeft <= 0) {
-      this.finishNight("lost", "Bình minh đã tới trước khi thắp hết đèn.");
+      const litList = this.lanterns.filter((l) => l.lit);
+      const needed = Math.ceil(0.6 * this.lanterns.length);
+      if (litList.length >= needed) {
+        for (const lt of litList) this.score += 50 + Math.floor(lt.fuel60 / 60);
+        this.score += this.flames * 50;
+        this.campaignTotalScore += this.score;
+        this.finishNight("won", `Sống sót tới bình minh với ${litList.length}/${this.lanterns.length} đèn sáng!`);
+      } else {
+        this.finishNight("lost", `Bình minh đã tới nhưng chỉ có ${litList.length}/${needed} đèn sáng.`);
+      }
     }
 
     this.updateHUD();
@@ -1284,11 +1378,15 @@ class DaoDenLongApp {
     document.getElementById("hud-score").textContent = String(this.score);
     const secs = Math.ceil(this.timeLeft);
     const clock = document.getElementById("hud-time");
-    clock.textContent = `${String(Math.floor(secs / 60)).padStart(2, "0")}:${String(secs % 60).padStart(2, "0")}`;
+    const clockStr = `${String(Math.floor(secs / 60)).padStart(2, "0")}:${String(secs % 60).padStart(2, "0")}`;
+    clock.textContent = this.timeLeft <= 30 && this.settings.colorblind ? `⚠ ${clockStr}` : clockStr;
     clock.classList.toggle("danger", this.timeLeft <= 30);
 
+    const carryCap = Math.min(20, 10 + 2 * this.successfulLights);
     document.getElementById("hud-mote-count").textContent = String(this.carried);
-    this.moteSlots.forEach((el, i) => el.classList.toggle("filled", i < this.carried));
+    const capEl = document.getElementById("hud-mote-cap");
+    if (capEl) capEl.textContent = String(carryCap);
+    this.moteSlots.forEach((el, i) => el.classList.toggle("filled", i < Math.min(10, this.carried)));
 
     const charmBadge = document.getElementById("hud-charm-badge");
     charmBadge.classList.toggle("hidden", this.charmTicks <= 0);
@@ -1373,6 +1471,20 @@ class DaoDenLongApp {
       }
     }
 
+    for (const lt of this.lanterns) {
+      if (lt.lit) {
+        const ud = lt.mesh.userData;
+        const frac = Math.max(0.01, lt.fuel60 / 6000);
+        ud.fuelBarFill.scale.x = frac;
+        ud.fuelBarBg.lookAt(this.camera.position);
+        ud.fuelBarFill.lookAt(this.camera.position);
+        const lowFuel = lt.fuel60 < 1800;
+        const blinkOn = !lowFuel || Math.floor(nowSec * 2) % 2 === 0; // 1 Hz slow blink
+        ud.orbMat.emissiveIntensity = blinkOn ? 1.6 : 0.35;
+        ud.fuelBarFill.visible = blinkOn;
+        ud.safeRing.material.opacity = lowFuel ? 0.0 : 0.35;
+      }
+    }
     for (const m of this.motes) {
       m.mesh.position.set(m.pos[0], m.pos[1] + 0.8 + Math.sin(nowSec * 3 + m.phase) * 0.2, m.pos[2]);
     }
