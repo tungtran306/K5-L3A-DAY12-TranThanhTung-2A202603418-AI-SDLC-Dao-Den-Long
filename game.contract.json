@@ -1,9 +1,11 @@
 {
-  "contract_version": "1.2",
+  "contract_version": "1.3",
   "team": "2A202603418-TranThanhTung",
-  "build_cmd": "python3 -m py_compile src/maps.py src/engine.py src/headless.py src/server.py",
+  "build_cmd": "python3 -m py_compile src/maps.py src/engine.py src/headless.py src/server.py src/leaderboard.py src/soak.py src/bench.py",
   "run_cmd": "python3 -m src.server",
   "headless_cmd": "python3 -m src.headless",
+  "bench_cmd": "python3 -m src.bench",
+  "soak_cmd": "python3 -m src.soak",
   "tuning": {
     "player_speed": 6.0,
     "dash_speed": 14.0,
