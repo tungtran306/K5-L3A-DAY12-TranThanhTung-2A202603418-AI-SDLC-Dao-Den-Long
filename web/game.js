@@ -628,6 +628,8 @@ class DaoDenLongApp {
     this.dashTicksLeft = 0;
     this.pulseCdTicks = 0;
     this.charmTicks = 0;
+    this.magnetTicks = 0;
+    this.shieldTicks = 0;
     this.respawnWaitTicks = 0;
     this.padLaunched = false;
     this.windActive = false;
@@ -679,7 +681,7 @@ class DaoDenLongApp {
     this.shades = [];
     this.drifters = [];
 
-    // Charms
+    // Charms (Standard Wind Charms)
     this.charms = this.nightDef.charms.map((c) => {
       const m = new THREE.Mesh(
         new THREE.OctahedronGeometry(0.45, 0),
@@ -688,6 +690,33 @@ class DaoDenLongApp {
       m.position.set(c.pos[0], c.pos[1] + 1.0, c.pos[2]);
       this.charmGroup.add(m);
       return { id: c.id, pos: [...c.pos], available: true, respawnTicks: 0, mesh: m };
+    });
+
+    // Creative 3D-only Bonus Charms (disabled in headless so Test Contract v1.1 is untouched)
+    const bonusDefs =
+      night === 1
+        ? [
+            { kind: "magnet", pos: [14, 0, 14] },
+            { kind: "shield", pos: [-14, 0, -14] },
+          ]
+        : night === 2
+          ? [
+              { kind: "magnet", pos: [12, 0, -12] },
+              { kind: "shield", pos: [58, 0, 12] },
+            ]
+          : [
+              { kind: "magnet", pos: [26, 0, -18] },
+              { kind: "shield", pos: [-26, 0, -18] },
+            ];
+    this.bonusCharms = bonusDefs.map((b) => {
+      const col = b.kind === "magnet" ? 0x38e8c6 : 0xffd166;
+      const m = new THREE.Mesh(
+        new THREE.TorusKnotGeometry(0.32, 0.1, 32, 8),
+        new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.65 })
+      );
+      m.position.set(b.pos[0], b.pos[1] + 1.05, b.pos[2]);
+      this.charmGroup.add(m);
+      return { kind: b.kind, pos: [...b.pos], available: true, respawnTicks: 0, mesh: m };
     });
 
     document.getElementById("hud-night-label").textContent = NIGHT_QUOTES[night].name;
@@ -768,6 +797,8 @@ class DaoDenLongApp {
     if (this.pulseCdTicks > 0) this.pulseCdTicks -= 1;
     if (this.invulnTicks > 0) this.invulnTicks -= 1;
     if (this.charmTicks > 0) this.charmTicks -= 1;
+    if (this.magnetTicks > 0) this.magnetTicks -= 1;
+    if (this.shieldTicks > 0) this.shieldTicks -= 1;
 
     // Dropped mote TTL
     this.motes = this.motes.filter((m) => {
@@ -788,6 +819,15 @@ class DaoDenLongApp {
         if (c.respawnTicks <= 0) {
           c.available = true;
           c.mesh.visible = true;
+        }
+      }
+    }
+    for (const b of this.bonusCharms) {
+      if (!b.available) {
+        b.respawnTicks -= 1;
+        if (b.respawnTicks <= 0) {
+          b.available = true;
+          b.mesh.visible = true;
         }
       }
     }
@@ -941,6 +981,31 @@ class DaoDenLongApp {
           c.mesh.visible = false;
           this.charmTicks = CHARM_DURATION_TICKS;
           this.sfx.lanternLit();
+        }
+      }
+
+      // Bonus creative charms (Magnet & Light Shield)
+      for (const b of this.bonusCharms) {
+        if (b.available && distXZ(this.playerPos, b.pos) <= 1.2 && Math.abs(this.playerPos[1] - b.pos[1]) <= 1.5) {
+          b.available = false;
+          b.mesh.visible = false;
+          if (b.kind === "magnet") {
+            this.magnetTicks = 720; // 12s
+            b.respawnTicks = 2100; // 35s
+          } else {
+            this.shieldTicks = 840; // 14s
+            b.respawnTicks = 2400; // 40s
+          }
+          this.sfx.lanternLit();
+        }
+      }
+      if (this.magnetTicks > 0 && this.carried < this.tuning.carry_capacity) {
+        for (const m of this.motes) {
+          const d = distXZ(this.playerPos, m.pos);
+          if (d > 0.2 && d <= 7.5 && Math.abs(this.playerPos[1] - m.pos[1]) <= 2.5) {
+            m.pos[0] += ((this.playerPos[0] - m.pos[0]) / d) * 8.5 * DT;
+            m.pos[2] += ((this.playerPos[2] - m.pos[2]) / d) * 8.5 * DT;
+          }
         }
       }
 
@@ -1104,6 +1169,20 @@ class DaoDenLongApp {
     if (this.respawnWaitTicks <= 0 && this.invulnTicks <= 0 && this.flames > 0) {
       for (const s of this.shades) {
         if (s.state !== "stunned" && s.state !== "recoil" && distXZ(this.playerPos, s.pos) <= 1.0 && Math.abs(this.playerPos[1] - s.pos[1]) <= 1.5) {
+          const dx = s.pos[0] - this.playerPos[0];
+          const dz = s.pos[2] - this.playerPos[2];
+          const d = Math.hypot(dx, dz) || 1;
+          s.state = "recoil";
+          s.stateTicks = SHADE_RECOIL_TICKS;
+          s.recoilVx = (dx / d) * (2.0 / (SHADE_RECOIL_TICKS * DT));
+          s.recoilVz = (dz / d) * (2.0 / (SHADE_RECOIL_TICKS * DT));
+          if (this.shieldTicks > 0) {
+            // Light Shield absorbs 1 shade hit without losing Flame or motes
+            this.shieldTicks = 0;
+            this.invulnTicks = 60;
+            this.sfx.pulse();
+            break;
+          }
           this.flames = Math.max(0, this.flames - 1);
           const dropped = Math.floor(this.carried * 0.5);
           this.carried -= dropped;
@@ -1113,13 +1192,6 @@ class DaoDenLongApp {
             const r = 1.5 + Math.random();
             this.addMote([this.playerPos[0] + r * Math.cos(a), this.playerPos[1], this.playerPos[2] + r * Math.sin(a)], "dropped", DROPPED_MOTE_TTL_TICKS);
           }
-          const dx = s.pos[0] - this.playerPos[0];
-          const dz = s.pos[2] - this.playerPos[2];
-          const d = Math.hypot(dx, dz) || 1;
-          s.state = "recoil";
-          s.stateTicks = SHADE_RECOIL_TICKS;
-          s.recoilVx = (dx / d) * (2.0 / (SHADE_RECOIL_TICKS * DT));
-          s.recoilVz = (dz / d) * (2.0 / (SHADE_RECOIL_TICKS * DT));
           this.sfx.hit();
           break;
         }
@@ -1205,6 +1277,14 @@ class DaoDenLongApp {
     charmBadge.classList.toggle("hidden", this.charmTicks <= 0);
     if (this.charmTicks > 0) charmBadge.textContent = `🧧 Bùa Gió: ${(this.charmTicks / 60).toFixed(1)}s`;
 
+    const magBadge = document.getElementById("hud-magnet-badge");
+    magBadge.classList.toggle("hidden", this.magnetTicks <= 0);
+    if (this.magnetTicks > 0) magBadge.textContent = `🧲 Hút Đom Đóm: ${(this.magnetTicks / 60).toFixed(1)}s`;
+
+    const shBadge = document.getElementById("hud-shield-badge");
+    shBadge.classList.toggle("hidden", this.shieldTicks <= 0);
+    if (this.shieldTicks > 0) shBadge.textContent = `🛡️ Khiên Ánh Sáng: ${(this.shieldTicks / 60).toFixed(1)}s`;
+
     const dashBox = document.getElementById("cd-dash");
     const dashVal = document.getElementById("cd-dash-val");
     if (this.charmTicks > 0) {
@@ -1282,6 +1362,12 @@ class DaoDenLongApp {
     }
     for (const c of this.charms) {
       if (c.available) c.mesh.rotation.y = nowSec * 2.2;
+    }
+    for (const b of this.bonusCharms) {
+      if (b.available) {
+        b.mesh.rotation.y = nowSec * 2.5;
+        b.mesh.rotation.x = nowSec * 1.4;
+      }
     }
     if (this.pulseWave) {
       this.pulseWave.age += DT;

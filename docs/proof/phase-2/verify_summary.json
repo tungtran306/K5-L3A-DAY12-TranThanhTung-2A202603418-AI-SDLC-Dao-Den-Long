@@ -1,8 +1,8 @@
 {
   "phase": "phase-2",
   "contract_version": "1.1",
-  "unittest_seconds": 1.876,
-  "full_night3_21600_ticks_seconds": 0.925,
+  "unittest_seconds": 1.889,
+  "full_night3_21600_ticks_seconds": 0.871,
   "determinism_sha256": {
     "night_1": "d0e3d80d9140d7afe1dcc6deefb3b66a957ebec0a093ea40401434a0416a76e9",
     "night_2": "30fd7ff02ff222c497ed30d0a8c1f50541641077aaae696cf24b2acef33c01df",

@@ -24,7 +24,14 @@ python3 -m src.server
 - **`E`**: Nạp đom đóm vào Đèn Lồng Lớn gần nhất (`interact_radius = 2.0m`, cần `10` đom đóm/đèn)
 - **`F`**: Tỏa Sáng (`pulse`) — tốn `3` đom đóm, bán kính `5.0m`, hồi chiêu `3.0s`, làm choáng Bóng Mực `2.0s` & đẩy lùi `4.0m`, ép Gió Lạc thả đồ
 - **`Esc` / `P`**: Tạm dừng (dừng hoàn toàn logic)
-- **`Q / R`**, **Mũi tên Trái/Phải**, hoặc **Kéo chuột**: Xoay camera 3D
+- **`Q / R`**, **Mũi tên Trái/Phải**, hoặc **Kéo chuột**: Xoay camera 3D (camera góc nhìn thứ ba tự do xoay quanh Mây; chế độ headless vẫn xử lý đúng `cam_yaw_deg` theo công thức Test Contract).
+
+## Sáng tạo của tôi
+Để tăng trải nghiệm chơi mà **không phá vỡ số liệu chuẩn, bản đồ chuẩn và Test Contract v1.1**, bản chơi 3D (`web/game.js`) bổ sung thêm **2 loại bùa buff cổ tích** trên cả 3 Đêm (tắt hoàn toàn trong chế độ headless `src/engine.py`):
+1. **Bùa Hút Đom Đóm (Xanh ngọc):** Hiệu lực `12s` (hồi sau `35s`), tự động hút các đom đóm trong bán kính `7.5m` bay về phía Mây.
+2. **Bùa Khiên Ánh Sáng (Vàng kim):** Hiệu lực `14s` (hồi sau `40s`), chặn `1` lần bị Bóng Mực chạm (không mất Ngọn Lửa, không rơi đom đóm, đẩy Bóng Mực vào trạng thái `recoil`).
+
+- **Bằng chứng phần lõi không bị ảnh hưởng:** Toàn bộ 12/12 test tự động và SHA-256 tính tất định của 3 Đêm trong [`docs/proof/phase-2/verify_summary.json`](docs/proof/phase-2/verify_summary.json) vẫn giữ nguyên kết quả `PASS` sau khi thêm sáng tạo.
 
 ## Cách tính điểm (Chuẩn hóa Ticket-02)
 Thông số chính thức tại [`game.contract.json`](game.contract.json) (`contract_version: "1.1"`):

@@ -12,6 +12,6 @@ test_shade_hit_drops_motes_with_ttl_and_recoil (test_engine.TestContractV11.test
 test_shade_respects_lit_lantern_safe_radius (test_engine.TestContractV11.test_shade_respects_lit_lantern_safe_radius) ... ok
 
 ----------------------------------------------------------------------
-Ran 12 tests in 1.752s
+Ran 12 tests in 1.766s
 
 OK
