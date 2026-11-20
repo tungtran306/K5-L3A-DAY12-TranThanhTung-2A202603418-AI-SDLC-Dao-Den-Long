@@ -34,29 +34,17 @@ python3 -m src.server
 
 - **Bằng chứng phần lõi không bị ảnh hưởng:** Toàn bộ 12/12 test tự động và SHA-256 tính tất định của 3 Đêm trong [`docs/proof/phase-2/verify_summary.json`](docs/proof/phase-2/verify_summary.json) vẫn giữ nguyên kết quả `PASS` sau khi thêm sáng tạo.
 
-## Cách tính điểm (Chuẩn hóa Ticket-02)
-Thông số chính thức tại [`game.contract.json`](game.contract.json) (`contract_version: "1.1"`):
-- Nạp 1 đom đóm vào đèn: `+10` điểm
-- Thắp sáng 1 Đèn Lồng Lớn: `+100` điểm
-- Mỗi Bóng Mực trúng Tỏa Sáng: `+5` điểm
-- Thưởng khi thắng Đêm: `+ floor(giây còn lại) * 2 + 50 * Ngọn Lửa còn lại`. Tổng điểm hành trình = tổng các Đêm đã thắng.
+## Cách tính điểm & Luật thắng (Phase 3 / Contract v1.2)
+Thông số chính thức tại [`game.contract.json`](game.contract.json) (`contract_version: "1.2"`):
+- **Luật thắng mới (`dawn_survived`):** Đèn sáng tự hao `1.0` dầu/giây (Bóng Mực hút thêm `5` dầu/giây khi `fuel < 30`). Giữ sống tới bình minh (`240 / 270 / 300 s`) với tối thiểu `ceil(0.6 * tổng đèn)` đèn đang sáng (Đêm 1: `3/5`, Đêm 2: `4/6`, Đêm 3: `5/7`).
+- **Sức chứa tăng dần:** `10 + 2 * số lần thắp thành công` (tối đa `20`).
+- **Điểm:** `+5` mỗi đom đóm nạp/châm dầu · `+100` thắp lần đầu · `+40` thắp lại (tốn `5` đom đóm) · `+5` Bóng Mực trúng Tỏa Sáng (`+15` nếu đang `drain`) · thưởng bình minh (khi thắng): `+50 + floor(fuel)` mỗi đèn sáng + `+50` mỗi Ngọn Lửa còn lại.
+- **Chế độ mù màu:** Bật *"Bảng màu dễ phân biệt"* trong Cài đặt (lưu `localStorage`).
 
-## Chế độ Headless (Test Contract v1.1)
-
-```bash
-python3 -m src.headless \
-  --seed 42 --night <1|2|3> \
-  [--scenario scenario.json] \
-  [--inputs inputs.json] \
-  --ticks 600 --out out.jsonl \
-  [--snapshot-every 10]
-```
-
-- Mô phỏng cố định **60 tick/giây**, tuân thủ chính xác thứ tự 12 bước của Ticket-02, tất định 100%, chạy trọn Đêm 3 (21,600 tick) trong dưới 2 giây.
-
-## Bằng chứng, Ghi chép & Harness AI
-- Ghi chép & Spec: [`docs/notes/phase-1.md`](docs/notes/phase-1.md) · [`docs/notes/phase-2.md`](docs/notes/phase-2.md)
-- Bằng chứng kiểm chứng tự động: [`docs/proof/phase-1/`](docs/proof/phase-1/) · [`docs/proof/phase-2/`](docs/proof/phase-2/)
+## Bằng chứng, ADR, Changelog & Harness AI
+- ADR thiết kế Phase 3: [`docs/adr/001-lantern-fuel-and-dawn-survival.md`](docs/adr/001-lantern-fuel-and-dawn-survival.md) · [`CHANGELOG.md`](CHANGELOG.md)
+- Ghi chép & Spec: [`docs/notes/phase-1.md`](docs/notes/phase-1.md) · [`docs/notes/phase-2.md`](docs/notes/phase-2.md) · [`docs/notes/phase-3.md`](docs/notes/phase-3.md)
+- Bằng chứng kiểm chứng tự động: [`docs/proof/phase-1/`](docs/proof/phase-1/) · [`docs/proof/phase-2/`](docs/proof/phase-2/) · [`docs/proof/phase-3/`](docs/proof/phase-3/)
 - Harness AI: [`AGENTS.md`](AGENTS.md), [`.agents/skills/verify-phase/SKILL.md`](.agents/skills/verify-phase/SKILL.md), [`scripts/verify.py`](scripts/verify.py), [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 - Bản quyền & Nguồn: [`CREDITS.md`](CREDITS.md) · [`LICENSE`](LICENSE)
 

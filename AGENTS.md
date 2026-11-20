@@ -1,17 +1,15 @@
-# AGENTS.md — Đảo Đèn Lồng (AI SDLC Harness — Phase 2 / Contract v1.1)
+# AGENTS.md — Đảo Đèn Lồng (AI SDLC Harness — Phase 3 / Contract v1.2)
 
 ## Stack & Commands
 - **Build / Check:** `python3 -m py_compile src/maps.py src/engine.py src/headless.py src/server.py`
 - **Play 3D Web Game:** `python3 -m src.server` (opens `http://127.0.0.1:8000`)
-- **Headless CLI (Contract v1.1):** `python3 -m src.headless --seed 42 --night <1|2|3> --ticks 600 --out out.jsonl`
-- **Full Verification Gate:** `python3 scripts/verify.py` (compiles, runs all `tests/` including Phase 1 regression & Phase 2 scenarios, verifies determinism across Nights 1–3, benchmarks full Night 3 21,600 ticks <= 30s, writes proof to `docs/proof/phase-2/`)
+- **Headless CLI (Contract v1.2):** `python3 -m src.headless --seed 42 --night <1|2|3> --ticks 600 --out out.jsonl`
+- **Full Verification Gate:** `python3 scripts/verify.py` (compiles, runs all `tests/`, verifies determinism across Nights 1–3, benchmarks full Night 3 <= 30s, writes proof to `docs/proof/phase-3/`)
 
-## Hard Invariants (Contract v1.1)
-1. **Single Source of Truth:** `game.contract.json` (`contract_version: "1.1"`) holds all standardized Ticket-02 constants.
-2. **Exact 12-Step Tick Order:**
-   `input/pause -> decrement timers -> move May & fall check -> pickup motes & charms -> interact lanterns -> safe zones -> pulse -> move shades & drifters -> collisions (drifter steal BEFORE shade hit, sorted by id) -> scheduled spawns -> win/lose (no_flames > all_lit > dawn) -> snapshot`.
-3. **Pause Semantics:** While paused, `tick` increments, `sim_tick` and all timers/spawns freeze, snapshot `state: "paused"`.
-4. **Shade States:** Must strictly use `spawning`, `wander`, `chase`, `recoil`, `stunned`.
-5. **Fall Off Island (`Y < -10`):** Ignores invuln, happens once, `-1` Flame, loses ALL carried motes (`lost` field in `player_hit`), waits 60 ticks then respawns at `(0,0,0)` with 90-tick invuln.
-6. **Performance:** Full Night (21,600 ticks) headless MUST finish in `<= 30s`.
-7. **Evidence Integrity:** Never fake tests, never hand-edit proof outputs, never commit `.env` or secrets. Always run `python3 scripts/verify.py` before committing or tagging.
+## Hard Invariants (Contract v1.2)
+1. **Single Source of Truth:** `game.contract.json` (`contract_version: "1.2"`) holds all standardized Ticket-02 & Ticket-03 constants.
+2. **Integer Fuel Precision:** Store lantern fuel internally in integer `1/60` units (`fuel_60 ∈ [0..6000]`). Decay `1/60` per tick, draining shades deduct `5/60` per tick. Round to 1 decimal only on output (`0` when unlit).
+3. **Lantern Safe Zone & Drain:** Only lit lanterns with `fuel_60 >= 1800` (`>= 30`) have a safe zone. Only `wander` shades target weak lanterns (`< 30`) and enter `drain` at `<= 2m`, emitting `fuel_drain` every 60 ticks.
+4. **Dawn Survival Win Rule:** No early win (`all_lit` removed). `no_flames` always loses immediately; at dawn (`time_left_s <= 0`), win (`dawn_survived`) iff lit lanterns `>= ceil(0.6 * total)`.
+5. **Dynamic Capacity:** `min(20, 10 + 2 * successful_lights)` (pre-lit scenario lanterns do not count).
+6. **Evidence Integrity:** Never fake tests, never silently skip broken tests (update with documented reason), never hand-edit proof outputs. Always run `python3 scripts/verify.py` before committing or tagging.
